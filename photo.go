@@ -10,6 +10,8 @@ import "io/ioutil"
 import "encoding/xml"
 import "unsafe"
 import "net/url"
+import "runtime"
+
 const winWidth = 1920
 const winHeight= 1080
 
@@ -59,7 +61,7 @@ type Flickr struct {
 func (flickr *Flickr) gerUrl(method string, urlParams url.Values) string {
 	var Url *url.URL
 
-    Url, _ = url.Parse("https://api.flickr.com/services/rest/")
+	Url, _ = url.Parse("https://api.flickr.com/services/rest/")
 
 	urlParams.Add("method", method)
 	urlParams.Add("api_key", flickr.api_key)
@@ -97,11 +99,10 @@ func wget(data chan []byte, url string){
 	data <- contents
 }
 
-func main() {
-	flickr := Flickr{"d23b3c30a27e62f70f3cf18b25d86a55"}
+func (flickr *Flickr) listPhotos(user_id string, per_page string, res chan *PhotoRsp ){
 	data := make(chan []byte)
 
-	go wget(data, flickr.gerUrl("flickr.people.getPublicPhotos", url.Values{"user_id": {"94969330@N02"}, "per_page" : {"10"}}))
+	go wget(data, flickr.gerUrl("flickr.people.getPublicPhotos", url.Values{"user_id": { user_id }, "per_page" : {per_page}}))
 
 	var rsp PhotoRsp
 
@@ -110,41 +111,87 @@ func main() {
 		panic(err)
 	}
 
-	for index,element := range rsp.Photos.Photo {
-		fmt.Printf("[%d] %s \n", index, element.Title)
+	res <- &rsp
+}
+
+
+func (flickr *Flickr) getUrls(in chan *PhotoRsp, out chan string){
+	rsp := <- in
+	//surfs := make(chan *sdl.Surface)
+	data := make(chan []byte)
+
+	for _,photo := range rsp.Photos.Photo {
+		fmt.Printf("Loadig:%s \n", photo.Title)
+
+		go wget(data, flickr.gerUrl("flickr.photos.getSizes", url.Values{"photo_id": { photo.ID }}))
+
+		var srsp SizeRsp
+		if err := xml.Unmarshal(<- data, &srsp); 
+		err != nil {
+			panic(err)
+		}
+		//fmt.Println(uri)
+		out <- srsp.Sizes.Size[len(srsp.Sizes.Size)-1].Source
+
+		
+	}	
+}
+
+func loadPhotos(in chan string){
+	sur := make(chan *sdl.Surface)
+	//dst := make(chan *sdl.Rect)
+	fmt.Printf("Loading photos")
+
+	for url := range in {
+		fmt.Printf("Loadig: %s \n",url)
+		go loadPhoto(url, sur)
+		fmt.Printf("Loaded: %s\n",url)
+		
+		surf := <- sur
+
+		go func() {
+			var x int32
+			var y int32
+			
+			var coef int32 = 1
+			if surf.W > winWidth {
+				coef = (surf.W/winWidth)
+			}
+
+			if surf.H > winHeight {
+				coef = (surf.H/winHeight)
+			}
+			x = surf.W/coef
+			y = surf.H/coef
+			fmt.Printf("img size: (%d, %d)\n", surf.W, surf.H)
+			
+			go func() {
+				dst := &sdl.Rect{int32((winWidth-x)/2) ,int32((winHeight-y)/2) , surf.W, surf.H}
+				
+
+
+				do(func(r *sdl.Renderer){
+
+					texture, err := r.CreateTextureFromSurface(surf)
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "Failed to create texture: %s\n", err)
+						return
+					}
+					defer texture.Destroy()
+
+					r.Copy(texture, nil, dst)
+				})
+			}()
+		}()
+
 	}
+}
 
-	var s int
-	_, _ = fmt.Scanf("%d", &s)
+func loadPhoto(url string ,out chan *sdl.Surface){
+	data := make(chan []byte)
 
-	go wget(data, flickr.gerUrl("flickr.photos.getSizes", url.Values{"photo_id": {rsp.Photos.Photo[s].ID} }))
-
-	var srsp SizeRsp
-
-	
-
-	if err := xml.Unmarshal(<- data, &srsp); 
-	err != nil {
-		panic(err)
-	}
-	//fmt.Println(uri)
-
-	for index,element := range srsp.Sizes.Size {
-		fmt.Printf("[%d] %s \n", index, element.Source)
-	}
-
-	var i int
-	_, _ = fmt.Scanf("%d", &i)
-
-
-
-	fmt.Printf("Loadig: %s \n",srsp.Sizes.Size[i].Source)
-
-	go wget(data, srsp.Sizes.Size[i].Source)
-
-
-  
-	fmt.Printf("Photo: %s\n",srsp.Sizes.Size[i].Source)
+	fmt.Printf("Downloading: %s \n",url)
+	go wget(data, url)
 	
 	contents := <- data
 
@@ -156,8 +203,27 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Failed to create surface: %s\n", err)
 		return
 	}
+	out <- surf
+}
 
+var mainfunc = make(chan func(*sdl.Renderer))
+
+func do(f func(*sdl.Renderer)) {
+	done := make(chan bool, 1)
+	mainfunc <- func(r *sdl.Renderer) {
+		r.Clear()
+		f(r)
+		r.Present()
+		done <- true
+	}
+	<-done
+}
+
+func main() {
+	runtime.LockOSThread()
+	flickr := Flickr{"d23b3c30a27e62f70f3cf18b25d86a55"}
 	sdl.Init(sdl.INIT_EVERYTHING)
+
 	window, err := sdl.CreateWindow("Images", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
 		winWidth, winHeight, sdl.WINDOW_SHOWN | sdl.WINDOW_OPENGL)
 	if err != nil {
@@ -172,53 +238,25 @@ func main() {
 	}
 	defer renderer.Destroy()
 
-/*	image,_ := img.Load("../flicker/images/13338279973_5945cdae28_z.jpg")
+	res := make(chan *PhotoRsp)
+	urls := make(chan string)
 
-	texture, err := renderer.CreateTextureFromSurface(image)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create texture: %s\n", err)
-		return
-//	}
-	defer texture.Destroy()
-*/
+	go flickr.listPhotos("94969330@N02", "10", res)
+	go flickr.getUrls(res, urls)
 
-	//src := sdl.Rect{0, 0, 1024, 1024}
-	var x int32
-	var y int32
-	
-	var coef int32 = 1
-	if surf.W > winWidth {
-		coef = (surf.W/winWidth)
-	}
-
-	if surf.H > winHeight {
-		coef = (surf.H/winHeight)
-	}
-	x = surf.W/coef;
-	y = surf.H/coef;
-	dst := sdl.Rect{int32((winWidth-x)/2) ,int32((winHeight-y)/2) , surf.W, surf.H}
+	go loadPhotos(urls)
 
 	renderer.Clear()
-	renderer.SetDrawColor(255, 255, 255, 255)
+	renderer.SetDrawColor(0, 0, 0, 255)
 	renderer.FillRect(&sdl.Rect{0, 0, int32(winWidth), int32(winHeight)})
 //	renderer.Copy(texture, &src, &dst)
 	renderer.Present()
-	fmt.Printf("img size: (%d, %d)\n", surf.W, surf.H)
-
-	texture, err := renderer.CreateTextureFromSurface(surf)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create texture: %s\n", err)
-		return
-	}
-	defer texture.Destroy()
 	
-	
-	renderer.Clear()
-	renderer.SetDrawColor(0, 0, 0, 255)
+	for f := range mainfunc {
+		f(renderer)
+	} 
 
-	renderer.FillRect(&sdl.Rect{0, 0, int32(winWidth), int32(winHeight)})
-
-	renderer.Copy(texture, nil, &dst)
+	//renderer.Copy(texture, nil, &dst)
 	renderer.Present()
 	
 	fmt.Scanln()
