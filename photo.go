@@ -2,140 +2,20 @@ package main
 
 import "github.com/veandco/go-sdl2/sdl"
 import "github.com/veandco/go-sdl2/sdl_image"
-
+import "time"
 import "fmt"
 import "os"
-import "net/http"
-import "io/ioutil"
-import "encoding/xml"
+
+
 import "unsafe"
-import "net/url"
 import "runtime"
+
+import "./flickr"
+import "./web"
+
 
 const winWidth = 1920
 const winHeight= 1080
-
-type PhotoRsp struct {
-	Photos struct {
-		Page    int `xml:"page,attr"`
-		Pages   int `xml:"pages,attr"`
-		Perpage int `xml:"perpage,attr"`
-		Total string `xml:"total,attr"`
-		Photo   []struct {
-			Farm     int    `xml:"farm,attr"`
-			ID       string `xml:"id,attr"`
-			Isfamily int    `xml:"isfamily,attr"`
-			Isfriend int    `xml:"isfriend,attr"`
-			Ispublic int    `xml:"ispublic,attr"`
-			Owner    string `xml:"owner,attr"`
-			Secret   string `xml:"secret,attr"`
-			Server   string `xml:"server,attr"`
-			Title    string `xml:"title,attr"`
-		} `xml:"photo"`
-	} `xml:"photos"`
-	Stat string `xml:"stat,attr"`
-}
-
-type SizeRsp struct {
-	XMLName xml.Name `xml:"rsp"`
-	Sizes struct {
-		Canblog     int `xml:"canblog,attr"`
-		Candownload int `xml:"candownload,attr"`
-		Canprint    int `xml:"canprint,attr"`
-		Size        []struct {
-			Height int    `xml:"height,attr"`
-			Label  string `xml:"label,attr"`
-			Media  string `xml:"media,attr"`
-			Source string `xml:"source,attr"`
-			URL    string `xml:"url,attr"`
-			Width  int    `xml:"width,attr"`
-		} `xml:"size"`
-	} `xml:"sizes"`
-	Stat string `xml:"stat,attr"`
-}
-
-type Flickr struct {
-	api_key string
-}
-
-func (flickr *Flickr) gerUrl(method string, urlParams url.Values) string {
-	var Url *url.URL
-
-	Url, _ = url.Parse("https://api.flickr.com/services/rest/")
-
-	urlParams.Add("method", method)
-	urlParams.Add("api_key", flickr.api_key)
-
-	Url.RawQuery = urlParams.Encode()
-	return Url.String()
-}
-/*
-func wget(chan data byte[], url string, args ...interface{}){
-	response, err := http.Get(fmt.Sprintf(url,args))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to load list: %s\n", err)
-		return
-	}
-	contents, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Printf("%s", err)
-		   os.Exit(1)
-	}
-	data <- contents
-}
-*/
-
-func wget(data chan []byte, url string){
-	response, err := http.Get(url)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to load list: %s\n", err)
-		return
-	}
-	contents, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Printf("%s", err)
-		   os.Exit(1)
-	}
-	data <- contents
-}
-
-func (flickr *Flickr) listPhotos(user_id string, per_page string, res chan *PhotoRsp ){
-	data := make(chan []byte)
-
-	go wget(data, flickr.gerUrl("flickr.people.getPublicPhotos", url.Values{"user_id": { user_id }, "per_page" : {per_page}}))
-
-	var rsp PhotoRsp
-
-	if err := xml.Unmarshal(<- data, &rsp); 
-	err != nil {
-		panic(err)
-	}
-
-	res <- &rsp
-}
-
-
-func (flickr *Flickr) getUrls(in chan *PhotoRsp, out chan string){
-	rsp := <- in
-	//surfs := make(chan *sdl.Surface)
-	data := make(chan []byte)
-
-	for _,photo := range rsp.Photos.Photo {
-		fmt.Printf("Loadig:%s \n", photo.Title)
-
-		go wget(data, flickr.gerUrl("flickr.photos.getSizes", url.Values{"photo_id": { photo.ID }}))
-
-		var srsp SizeRsp
-		if err := xml.Unmarshal(<- data, &srsp); 
-		err != nil {
-			panic(err)
-		}
-		//fmt.Println(uri)
-		out <- srsp.Sizes.Size[len(srsp.Sizes.Size)-1].Source
-
-		
-	}	
-}
 
 func loadPhotos(in chan string){
 	sur := make(chan *sdl.Surface)
@@ -153,23 +33,33 @@ func loadPhotos(in chan string){
 			var x int32
 			var y int32
 			
-			var coef int32 = 1
+			var coef float32 = 1
+			var coef1 float32 = 1
+			var coef2 float32 = 1
+
 			if surf.W > winWidth {
-				coef = (surf.W/winWidth)
+				coef1 = (float32(surf.W)/float32(winWidth))
+				fmt.Printf("coef[1]: %f\n",coef1)
+
 			}
 
 			if surf.H > winHeight {
-				coef = (surf.H/winHeight)
+				coef2 = (float32(surf.H)/float32(winHeight))
+				fmt.Printf("coef[2]: %f\n",coef2)
 			}
-			x = surf.W/coef
-			y = surf.H/coef
-			fmt.Printf("img size: (%d, %d)\n", surf.W, surf.H)
+
+			if coef1 > coef2{
+				coef = coef1
+			}else{
+				coef = coef2
+			}
+			x = int32(float32(surf.W)/coef)
+			y = int32(float32(surf.H)/coef)
+			fmt.Printf("img size: (%d, %d)\ncomputed size: (%d, %d)\n",surf.W, surf.H, x, y)
+
 			
 			go func() {
-				dst := &sdl.Rect{int32((winWidth-x)/2) ,int32((winHeight-y)/2) , surf.W, surf.H}
-				
-
-
+				dst := &sdl.Rect{int32((winWidth-x)/2) ,int32((winHeight-y)/2) , x, y}
 				do(func(r *sdl.Renderer){
 
 					texture, err := r.CreateTextureFromSurface(surf)
@@ -180,10 +70,11 @@ func loadPhotos(in chan string){
 					defer texture.Destroy()
 
 					r.Copy(texture, nil, dst)
+					r.Present()
+					surf.Free()
 				})
 			}()
 		}()
-
 	}
 }
 
@@ -191,14 +82,14 @@ func loadPhoto(url string ,out chan *sdl.Surface){
 	data := make(chan []byte)
 
 	fmt.Printf("Downloading: %s \n",url)
-	go wget(data, url)
+	go web.Get(data, url)
 	
 	contents := <- data
 
 	rwops := sdl.RWFromMem(unsafe.Pointer(&contents[0]), len(contents))
 	defer rwops.RWclose()
 	surf, err := img.Load_RW(rwops, false)
-
+	//rwops.FreeRW()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create surface: %s\n", err)
 		return
@@ -213,7 +104,6 @@ func do(f func(*sdl.Renderer)) {
 	mainfunc <- func(r *sdl.Renderer) {
 		r.Clear()
 		f(r)
-		r.Present()
 		done <- true
 	}
 	<-done
@@ -221,7 +111,7 @@ func do(f func(*sdl.Renderer)) {
 
 func main() {
 	runtime.LockOSThread()
-	flickr := Flickr{"d23b3c30a27e62f70f3cf18b25d86a55"}
+	api := flickr.Flickr{"d23b3c30a27e62f70f3cf18b25d86a55"}
 	sdl.Init(sdl.INIT_EVERYTHING)
 
 	window, err := sdl.CreateWindow("Images", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
@@ -238,11 +128,13 @@ func main() {
 	}
 	defer renderer.Destroy()
 
-	res := make(chan *PhotoRsp)
-	urls := make(chan string)
+	res := make(chan *flickr.PhotoRsp, 2)
+	urls := make(chan string, 2)
+	
+	var page int32 = 1
 
-	go flickr.listPhotos("94969330@N02", "10", res)
-	go flickr.getUrls(res, urls)
+	go api.ListPhotos("94969330@N02", "10", page, res)
+	go api.GetUrls(res, urls)
 
 	go loadPhotos(urls)
 
@@ -251,9 +143,21 @@ func main() {
 	renderer.FillRect(&sdl.Rect{0, 0, int32(winWidth), int32(winHeight)})
 //	renderer.Copy(texture, &src, &dst)
 	renderer.Present()
-	
+	var c int = 1
 	for f := range mainfunc {
 		f(renderer)
+		time.Sleep(time.Second * 2)
+		c++
+		
+		fmt.Printf("image [%d]\npage [%d]\n", c, page)
+		if(c == 10){
+			c = 1;
+			page+= 1
+			go api.ListPhotos("94969330@N02", "10", page, res)
+			go api.GetUrls(res, urls)
+
+		}
+		// wrong to do that here
 	} 
 
 	//renderer.Copy(texture, nil, &dst)
