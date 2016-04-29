@@ -62,13 +62,13 @@ func (flickr *Flickr) GetUrl(method string, urlParams url.Values) string {
 }
 
 func (flickr *Flickr) ListPhotos(user_id string, per_page string, page int32, res chan *PhotoRsp ){
-	data := make(chan []byte)
+	data := make(chan []byte, 1)
 
 	go web.Get(data, flickr.GetUrl("flickr.people.getPublicPhotos", url.Values{"user_id": { user_id }, "per_page" : {per_page}, "page": {fmt.Sprintf("%d",page)}}))
 
 	var rsp PhotoRsp
 
-	if err := xml.Unmarshal(<- data, &rsp); 
+	if err := xml.Unmarshal(<- data, &rsp);
 	err != nil {
 		panic(err)
 	}
@@ -76,6 +76,20 @@ func (flickr *Flickr) ListPhotos(user_id string, per_page string, page int32, re
 	res <- &rsp
 }
 
+func (flickr *Flickr) GetFavs(user_id string, per_page string, page int32, res chan *PhotoRsp){
+	data := make(chan []byte, 1)
+
+	go web.Get(data, flickr.GetUrl("flickr.favorites.getPublicList", url.Values{"user_id": { user_id }, "per_page" : {per_page}, "page": {fmt.Sprintf("%d",page)}}))
+
+	var rsp PhotoRsp
+
+	if err := xml.Unmarshal(<- data, &rsp);
+	err != nil {
+		panic(err)
+	}
+
+	res <- &rsp
+}
 
 func (flickr *Flickr) GetUrls(in chan *PhotoRsp, out chan string){
 	rsp := <- in
@@ -88,7 +102,7 @@ func (flickr *Flickr) GetUrls(in chan *PhotoRsp, out chan string){
 		go web.Get(data, flickr.GetUrl("flickr.photos.getSizes", url.Values{"photo_id": { photo.ID }}))
 
 		var srsp SizeRsp
-		if err := xml.Unmarshal(<- data, &srsp); 
+		if err := xml.Unmarshal(<- data, &srsp);
 		err != nil {
 			panic(err)
 		}
@@ -102,6 +116,6 @@ func (flickr *Flickr) GetUrls(in chan *PhotoRsp, out chan string){
 
 		out <- srsp.Sizes.Size[size].Source
 
-		
-	}	
+
+	}
 }
