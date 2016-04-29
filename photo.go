@@ -15,8 +15,8 @@ import "./web"
 const winWidth = 1920
 const winHeight = 1080
 
-func loadPhotos(in chan string) {
-	sur := make(chan *sdl.Surface, 1)
+func loadPhotos(in chan string){
+	sur := make(chan *sdl.Surface, 2)
 	//dst := make(chan *sdl.Rect)
 	fmt.Printf("Loading photos")
 
@@ -110,8 +110,7 @@ func main() {
 	api := flickr.Flickr{"d23b3c30a27e62f70f3cf18b25d86a55"}
 	sdl.Init(sdl.INIT_EVERYTHING)
 
-	window, err := sdl.CreateWindow("Images", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-		winWidth, winHeight, sdl.WINDOW_SHOWN|sdl.WINDOW_OPENGL)
+	window, err := sdl.CreateWindow("Images", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, winWidth, winHeight, sdl.WINDOW_SHOWN | sdl.WINDOW_OPENGL)
 	if err != nil {
 		panic(err)
 	}
@@ -124,9 +123,10 @@ func main() {
 	}
 	defer renderer.Destroy()
 
-	res := make(chan *flickr.PhotoRsp, 2)
-	urls := make(chan string, 2)
+	sdl.ShowCursor(0)
 
+	res := make(chan *flickr.PhotoRsp, 2)
+	urls := make(chan string, 10)
 	var page int32 = 1
 
 	go api.ListPhotos("94969330@N02", "10", page, res)
