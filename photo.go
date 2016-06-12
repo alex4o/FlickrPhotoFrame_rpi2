@@ -109,31 +109,43 @@ func main() {
 	runtime.LockOSThread()
 	api := flickr.Flickr{"d23b3c30a27e62f70f3cf18b25d86a55"}
 
-	sdl.Init(sdl.INIT_EVERYTHING)
-
 	r, _ := sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
 	g, _ := sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
 	b, _ := sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
 
 	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
 
+	r, _ = sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
+	g, _ = sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
+	b, _ = sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
+	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
+
 	sdl.GL_SetAttribute(sdl.GL_RED_SIZE, 8)
 	sdl.GL_SetAttribute(sdl.GL_GREEN_SIZE, 8)
 	sdl.GL_SetAttribute(sdl.GL_BLUE_SIZE, 8)
 
-	r, _ = sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
-	g, _ = sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
-	b, _ = sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
-
-	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
+	sdl.Init(sdl.INIT_EVERYTHING)
 
 	window, err := sdl.CreateWindow("Images", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, winWidth, winHeight, sdl.WINDOW_SHOWN|sdl.WINDOW_OPENGL)
+
 	if err != nil {
 		panic(err)
 	}
 	defer window.Destroy()
 
 	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
+
+	r, _ = sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
+	g, _ = sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
+	b, _ = sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
+	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
+
+	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
+	cpm, _ := sdl.GL_GetAttribute(sdl.GL_CONTEXT_PROFILE_MASK)
+	mav, _ := sdl.GL_GetAttribute(sdl.GL_CONTEXT_MAJOR_VERSION)
+	miv, _ := sdl.GL_GetAttribute(sdl.GL_CONTEXT_MINOR_VERSION)
+	fmt.Printf("context (%d), (%d, %d) \n", cpm, mav, miv)
+
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create renderer: %s\n", err)
 		return
@@ -176,6 +188,6 @@ func main() {
 	//renderer.Copy(texture, nil, &dst)
 	renderer.Present()
 
-	fmt.Scanln()
+	//fmt.Scanln()
 	sdl.Quit()
 }
