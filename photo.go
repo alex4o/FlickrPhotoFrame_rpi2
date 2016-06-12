@@ -15,7 +15,7 @@ import "./web"
 const winWidth = 1920
 const winHeight = 1080
 
-func loadPhotos(in chan string){
+func loadPhotos(in chan string) {
 	sur := make(chan *sdl.Surface, 2)
 	//dst := make(chan *sdl.Rect)
 	fmt.Printf("Loading photos")
@@ -116,7 +116,7 @@ func main() {
 	sdl.GL_SetAttribute(sdl.GL_BLUE_SIZE, 8)
 
 
-	window, err := sdl.CreateWindow("Images", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, winWidth, winHeight, sdl.WINDOW_SHOWN | sdl.WINDOW_OPENGL)
+	window, err := sdl.CreateWindow("Images", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, winWidth, winHeight, sdl.WINDOW_SHOWN|sdl.WINDOW_OPENGL)
 	if err != nil {
 		panic(err)
 	}
@@ -146,16 +146,16 @@ func main() {
 	renderer.FillRect(&sdl.Rect{0, 0, int32(winWidth), int32(winHeight)})
 	//	renderer.Copy(texture, &src, &dst)
 	renderer.Present()
-	var c int = 1
+	var c = 1
 	for f := range mainfunc {
 		f(renderer)
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second * 5)
 		c++
 
 		fmt.Printf("image [%d]\npage [%d]\n", c, page)
 		if c == 10 {
 			c = 1
-			page += 1
+			page++
 			go api.GetFavs("94969330@N02", "10", page, res)
 			go api.GetUrls(res, urls)
 
