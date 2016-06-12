@@ -108,7 +108,13 @@ func do(f func(*sdl.Renderer)) {
 func main() {
 	runtime.LockOSThread()
 	api := flickr.Flickr{"d23b3c30a27e62f70f3cf18b25d86a55"}
+
+
 	sdl.Init(sdl.INIT_EVERYTHING)
+	sdl.GL_SetAttribute(sdl.GL_RED_SIZE, 8)
+	sdl.GL_SetAttribute(sdl.GL_GREEN_SIZE, 8)
+	sdl.GL_SetAttribute(sdl.GL_BLUE_SIZE, 8)
+
 
 	window, err := sdl.CreateWindow("Images", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, winWidth, winHeight, sdl.WINDOW_SHOWN | sdl.WINDOW_OPENGL)
 	if err != nil {
@@ -125,11 +131,12 @@ func main() {
 
 	sdl.ShowCursor(0)
 
+
 	res := make(chan *flickr.PhotoRsp, 2)
 	urls := make(chan string, 10)
 	var page int32 = 1
 
-	go api.ListPhotos("94969330@N02", "10", page, res)
+	go api.GetFavs("94969330@N02", "10", page, res)
 	go api.GetUrls(res, urls)
 
 	go loadPhotos(urls)
@@ -149,7 +156,7 @@ func main() {
 		if c == 10 {
 			c = 1
 			page += 1
-			go api.ListPhotos("94969330@N02", "10", page, res)
+			go api.GetFavs("94969330@N02", "10", page, res)
 			go api.GetUrls(res, urls)
 
 		}
