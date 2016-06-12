@@ -135,16 +135,16 @@ func main() {
 
 	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
 
-	r, _ := sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
-	g, _ := sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
-	b, _ := sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
-	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
-
-	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
-	cpm, _ := sdl.GL_GetAttribute(sdl.GL_CONTEXT_PROFILE_MASK)
-	mav, _ := sdl.GL_GetAttribute(sdl.GL_CONTEXT_MAJOR_VERSION)
-	miv, _ := sdl.GL_GetAttribute(sdl.GL_CONTEXT_MINOR_VERSION)
-	fmt.Printf("context (%d), (%d, %d) \n", cpm, mav, miv)
+	// r, _ := sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
+	// g, _ := sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
+	// b, _ := sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
+	// fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
+	//
+	// fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
+	// cpm, _ := sdl.GL_GetAttribute(sdl.GL_CONTEXT_PROFILE_MASK)
+	// mav, _ := sdl.GL_GetAttribute(sdl.GL_CONTEXT_MAJOR_VERSION)
+	// miv, _ := sdl.GL_GetAttribute(sdl.GL_CONTEXT_MINOR_VERSION)
+	// fmt.Printf("context (%d), (%d, %d) \n", cpm, mav, miv)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create renderer: %s\n", err)
