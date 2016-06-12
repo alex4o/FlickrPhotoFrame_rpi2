@@ -21,9 +21,9 @@ func loadPhotos(in chan string) {
 	fmt.Printf("Loading photos")
 
 	for url := range in {
-		fmt.Printf("Loadig: %s \n", url)
+		//fmt.Printf("Loadig: %s \n", url)
 		go loadPhoto(url, sur)
-		fmt.Printf("Loaded: %s\n", url)
+		//fmt.Printf("Loaded: %s\n", url)
 		surf := <-sur
 
 		go func() {
@@ -36,13 +36,13 @@ func loadPhotos(in chan string) {
 
 			if surf.W > winWidth {
 				coef1 = (float32(surf.W) / float32(winWidth))
-				fmt.Printf("coef[1]: %f\n", coef1)
+				//fmt.Printf("coef[1]: %f\n", coef1)
 
 			}
 
 			if surf.H > winHeight {
 				coef2 = (float32(surf.H) / float32(winHeight))
-				fmt.Printf("coef[2]: %f\n", coef2)
+				//fmt.Printf("coef[2]: %f\n", coef2)
 			}
 
 			if coef1 > coef2 {
@@ -52,7 +52,7 @@ func loadPhotos(in chan string) {
 			}
 			x = int32(float32(surf.W) / coef)
 			y = int32(float32(surf.H) / coef)
-			fmt.Printf("img size: (%d, %d)\ncomputed size: (%d, %d)\n", surf.W, surf.H, x, y)
+			//fmt.Printf("img size: (%d, %d)\ncomputed size: (%d, %d)\n", surf.W, surf.H, x, y)
 
 			go func() {
 				dst := &sdl.Rect{int32((winWidth - x) / 2), int32((winHeight - y) / 2), x, y}
@@ -109,12 +109,23 @@ func main() {
 	runtime.LockOSThread()
 	api := flickr.Flickr{"d23b3c30a27e62f70f3cf18b25d86a55"}
 
-
 	sdl.Init(sdl.INIT_EVERYTHING)
+
+	r, _ := sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
+	g, _ := sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
+	b, _ := sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
+
+	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
+
 	sdl.GL_SetAttribute(sdl.GL_RED_SIZE, 8)
 	sdl.GL_SetAttribute(sdl.GL_GREEN_SIZE, 8)
 	sdl.GL_SetAttribute(sdl.GL_BLUE_SIZE, 8)
 
+	r, _ = sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
+	g, _ = sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
+	b, _ = sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
+
+	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
 
 	window, err := sdl.CreateWindow("Images", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, winWidth, winHeight, sdl.WINDOW_SHOWN|sdl.WINDOW_OPENGL)
 	if err != nil {
@@ -130,7 +141,6 @@ func main() {
 	defer renderer.Destroy()
 
 	sdl.ShowCursor(0)
-
 
 	res := make(chan *flickr.PhotoRsp, 2)
 	urls := make(chan string, 10)
@@ -152,7 +162,7 @@ func main() {
 		time.Sleep(time.Second * 5)
 		c++
 
-		fmt.Printf("image [%d]\npage [%d]\n", c, page)
+		//fmt.Printf("image [%d]\npage [%d]\n", c, page)
 		if c == 10 {
 			c = 1
 			page++
