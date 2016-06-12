@@ -108,21 +108,21 @@ func do(f func(*sdl.Renderer)) {
 func main() {
 	runtime.LockOSThread()
 	api := flickr.Flickr{"d23b3c30a27e62f70f3cf18b25d86a55"}
+	//
+	// r, _ := sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
+	// g, _ := sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
+	// b, _ := sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
+	//
+	// fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
+	//
+	// r, _ = sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
+	// g, _ = sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
+	// b, _ = sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
+	// fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
 
-	r, _ := sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
-	g, _ := sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
-	b, _ := sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
-
-	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
-
-	r, _ = sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
-	g, _ = sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
-	b, _ = sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
-	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
-
-	sdl.GL_SetAttribute(sdl.GL_RED_SIZE, 8)
-	sdl.GL_SetAttribute(sdl.GL_GREEN_SIZE, 8)
-	sdl.GL_SetAttribute(sdl.GL_BLUE_SIZE, 8)
+	// sdl.GL_SetAttribute(sdl.GL_RED_SIZE, 8)
+	// sdl.GL_SetAttribute(sdl.GL_GREEN_SIZE, 8)
+	// sdl.GL_SetAttribute(sdl.GL_BLUE_SIZE, 8)
 
 	sdl.Init(sdl.INIT_EVERYTHING)
 
@@ -135,9 +135,9 @@ func main() {
 
 	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
 
-	r, _ = sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
-	g, _ = sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
-	b, _ = sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
+	r, _ := sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
+	g, _ := sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
+	b, _ := sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
 	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
 
 	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
