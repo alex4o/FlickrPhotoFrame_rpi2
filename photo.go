@@ -135,10 +135,10 @@ func main() {
 
 	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
 
-	// r, _ := sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
-	// g, _ := sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
-	// b, _ := sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
-	// fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
+	r, _ := sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
+	g, _ := sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
+	b, _ := sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
+	fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
 	//
 	// fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
 	// cpm, _ := sdl.GL_GetAttribute(sdl.GL_CONTEXT_PROFILE_MASK)
@@ -169,7 +169,18 @@ func main() {
 	//	renderer.Copy(texture, &src, &dst)
 	renderer.Present()
 	var c = 1
+
 	for f := range mainfunc {
+		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+			switch event.(type) {
+			case *sdl.QuitEvent:
+				fmt.Printf("Exiting...\n")
+				sdl.Quit()
+				break
+			}
+		}
+		fmt.Printf("Rendering [%d]\n", c)
+
 		f(renderer)
 		time.Sleep(time.Second * 5)
 		c++
