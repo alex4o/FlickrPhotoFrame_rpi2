@@ -134,9 +134,9 @@ func main() {
 	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
 
 	//var info sdl.RendererInfo
-	surf, _ := window.GetSurface()
+	//surf, _ := window.GetSurface()
 
-	fmt.Printf("BytesPerPixel (%d) \n", surf.BytesPerPixel())
+	//fmt.Printf("BytesPerPixel (%d) \n", surf.BytesPerPixel())
 
 	//surf.Convert(&sdl.PixelFormat{Format: sdl.PIXELFORMAT_RGB332, BytesPerPixel: 2, BitsPerPixel: 16}, 0)
 
