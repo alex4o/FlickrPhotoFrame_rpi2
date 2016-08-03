@@ -26,6 +26,8 @@ func loadPhotos(in chan string) {
 		//fmt.Printf("Loaded: %s\n", url)
 		surf := <-sur
 
+		//surf, _ = surf.Convert(&sdl.PixelFormat{Format: sdl.PIXELFORMAT_RGB888, BytesPerPixel: 3, BitsPerPixel: 24}, 0)
+
 		go func() {
 			var x int32
 			var y int32
@@ -134,7 +136,9 @@ func main() {
 	//var info sdl.RendererInfo
 	surf, _ := window.GetSurface()
 
-	fmt.Printf("BytesPerPixel (%d) \n", surf.Format.BytesPerPixel)
+	fmt.Printf("BytesPerPixel (%d) \n", surf.BytesPerPixel())
+
+	//surf.Convert(&sdl.PixelFormat{Format: sdl.PIXELFORMAT_RGB332, BytesPerPixel: 2, BitsPerPixel: 16}, 0)
 
 	r, _ := sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
 	g, _ := sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
