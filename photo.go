@@ -120,10 +120,6 @@ func main() {
 	// b, _ = sdl.GL_GetAttribute(sdl.GL_BLUE_SIZE)
 	// fmt.Printf("size rgb (%d,%d,%d) \n", r, g, b)
 
-	sdl.GL_SetAttribute(sdl.GL_RED_SIZE, 8)
-	sdl.GL_SetAttribute(sdl.GL_GREEN_SIZE, 8)
-	sdl.GL_SetAttribute(sdl.GL_BLUE_SIZE, 8)
-
 	sdl.Init(sdl.INIT_EVERYTHING)
 
 	window, err := sdl.CreateWindow("Images", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, winWidth, winHeight, sdl.WINDOW_SHOWN|sdl.WINDOW_OPENGL)
@@ -134,6 +130,11 @@ func main() {
 	defer window.Destroy()
 
 	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
+
+	//var info sdl.RendererInfo
+	surf, _ := window.GetSurface()
+
+	fmt.Printf("BytesPerPixel (%d) \n", surf.Format.BytesPerPixel)
 
 	r, _ := sdl.GL_GetAttribute(sdl.GL_RED_SIZE)
 	g, _ := sdl.GL_GetAttribute(sdl.GL_GREEN_SIZE)
